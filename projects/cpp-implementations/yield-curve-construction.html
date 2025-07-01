@@ -10,6 +10,7 @@
     pre { background: #f4f4f4; padding: 1em; border-radius: 6px; overflow-x: auto; }
     code { font-family: 'Fira Mono', 'Consolas', monospace; }
     .center-img { display: block; margin: 1.5em auto; max-width: 500px; width: 100%; }
+    blockquote { color: #666; background: #f9f9f9; border-left: 4px solid #bbb; margin: 1em 0; padding: 1em 1.5em; }
   </style>
 </head>
 <body>
@@ -26,50 +27,141 @@
     <section>
       <h2>Overview</h2>
       <p>
-        Yield curve construction is fundamental in fixed income analytics. The <b>bootstrapping</b> method extracts zero-coupon (spot) rates from bond prices, and interpolation fills in rates for non-observed maturities.
+        The <b>yield curve</b> is a core concept in fixed income: it relates the interest rate (yield) to different maturities. It's essential for pricing bonds, interest rate derivatives, and for risk management.
+        Yield curve construction turns a set of market instrument prices (deposits, swaps, government bonds) into a smooth curve of zero-coupon yields (spot rates).
       </p>
-      <h3>Bootstrapping Zero-Coupon Curve</h3>
+    </section>
+
+    <section>
+      <h2>Theory and Methodology</h2>
       <p>
-        For a zero-coupon bond, the spot rate \( r \) is found from the price \( P \) and face value \( F \):
+        Two main steps are involved:
       </p>
-      <div style="overflow-x:auto"><span>\[
-P = \frac{F}{(1 + r)^T}
-\]</span></div>
+      <ol>
+        <li><b>Bootstrapping:</b> Extracting zero-coupon rates from traded securities, recursively.</li>
+        <li><b>Interpolation:</b> Estimating yields at maturities where no instrument is quoted (for smoothness).</li>
+      </ol>
+      <h3>Bootstrapping the Zero-Coupon Curve</h3>
       <p>
-        For coupon bonds, solve recursively using known spot rates for earlier maturities.
+        <b>Zero-coupon bonds:</b>
+        The spot rate \( r \) for maturity \( T \) is derived from its price \( P \) and face value \( F \):
       </p>
-      <h4>C++ Example: Bootstrapping Spot Rates</h4>
+      <div style="overflow-x:auto">
+        <span>
+          \[
+          P = \frac{F}{(1 + r)^T}
+          \quad \implies \quad
+          r = \left(\frac{F}{P}\right)^{1/T} - 1
+          \]
+        </span>
+      </div>
+      <p>
+        <b>Coupon bonds:</b> More complex, as each cashflow is discounted using the corresponding (already bootstrapped) spot rates. For a bond with coupon \( C \), maturity \( T \):
+      </p>
+      <div style="overflow-x:auto">
+        <span>
+          \[
+          P = \sum_{i=1}^{T-1} \frac{C}{(1 + r_i)^i} + \frac{F + C}{(1 + r_T)^T}
+          \]
+        </span>
+      </div>
+      <p>
+        The final unknown rate \( r_T \) can be solved numerically (often using root-finding) if not in closed-form.
+      </p>
+    </section>
+
+    <section>
+      <h2>Intricacies and Practical Details</h2>
+      <ul>
+        <li><b>Day count conventions:</b> Actual/Actual, 30/360, etc., affect cashflow timing and rate calculation.</li>
+        <li><b>Instrument choice:</b> Short end: deposits/OIS; middle: futures; long end: swaps/bonds.</li>
+        <li><b>Curve smoothness:</b> Interpolation (linear, cubic spline, Nelson-Siegel, etc.) ensures arbitrage-free, smooth curves.</li>
+        <li><b>Multiple curves:</b> Since the 2008 crisis, separate discount and forward rate curves (OIS discounting, LIBOR/EURIBOR forwards) are common in practice.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>C++ Implementation: Yield Curve Bootstrapping</h2>
+      <p>
+        Below is the C++ code used to bootstrap spot rates from fixed-coupon bond prices. This version outputs the results to a CSV file for further analysis and visualization.
+      </p>
       <pre><code>#include &lt;iostream&gt;
 #include &lt;vector&gt;
 #include &lt;cmath&gt;
+#include &lt;fstream&gt;
+#include &lt;iomanip&gt;
+
+double bootstrapSpot(int idx, const std::vector&lt;double&gt;& prices,
+                     const std::vector&lt;double&gt;& coupons,
+                     const std::vector&lt;double&gt;& spots,
+                     double face) {
+    double sum = 0.0;
+    for (int j = 0; j &lt; idx; ++j)
+        sum += coupons[idx] / std::pow(1 + spots[j], j + 1);
+    double numer = coupons[idx] + face;
+    double denom = prices[idx] - sum;
+    return std::pow(numer / denom, 1.0 / (idx + 1)) - 1.0;
+}
 
 int main() {
-    // Example: 1Y, 2Y, 3Y bonds (annual coupons)
-    std::vector&lt;double&gt; prices = {98.0, 95.0, 92.0};
-    std::vector&lt;double&gt; coupons = {2.0, 2.5, 3.0};
+    std::vector&lt;double&gt; prices  = {98.0, 95.0, 92.0, 89.0, 86.0};
+    std::vector&lt;double&gt; coupons = {2.0, 2.5, 3.0, 3.2, 3.5};
     double face = 100.0;
     std::vector&lt;double&gt; spots;
+
+    std::ofstream out("spot_rates.csv");
+    out &lt;&lt; "Year,SpotRate\n";
+
     for (size_t i = 0; i &lt; prices.size(); ++i) {
-        double sum = 0.0;
-        for (size_t j = 0; j &lt; i; ++j)
-            sum += coupons[i] / std::pow(1 + spots[j], j + 1);
-        double numer = coupons[i] + face;
-        double denom = prices[i] - sum;
-        double r = std::pow(numer / denom, 1.0 / (i + 1)) - 1.0;
-        spots.push_back(r);
-        std::cout &lt;&lt; "Year " &lt;&lt; (i+1) &lt;&lt; ": Spot rate = " &lt;&lt; r*100 &lt;&lt; "%\n";
+        double spot = bootstrapSpot(i, prices, coupons, spots, face);
+        spots.push_back(spot);
+        out &lt;&lt; (i + 1) &lt;&lt; "," &lt;&lt; std::fixed &lt;&lt; std::setprecision(6) &lt;&lt; spot * 100 &lt;&lt; "\n";
+        std::cout &lt;&lt; "Year " &lt;&lt; (i + 1) &lt;&lt; ": Spot rate = " &lt;&lt; spot * 100 &lt;&lt; "%\n";
     }
+
+    out.close();
     return 0;
 }
 </code></pre>
-      <h3>Visualization</h3>
-      <p>The GIF below animates the construction of a yield curve from synthetic bond data.</p>
-      <img src="yield_curve_bootstrap.gif" alt="Yield Curve Bootstrapping GIF" class="center-img" />
-      <p><em>Bootstrapped spot rates are shown for increasing maturities.</em></p>
+      <p>
+        This approach assumes annual coupons and simple yield conventions, but can be extended to semi-annual, different day-counts, and robust root-finding for more complex cashflows. The output CSV can be used for plotting and animation.
+      </p>
+    </section>
+
+    <section>
+      <h2>Interpolation Methods</h2>
+      <p>
+        Bootstrapping only yields spot rates at quoted maturities. For other maturities, <b>interpolation</b> is required.
+      </p>
+      <ul>
+        <li><b>Linear interpolation</b> (on yields or discount factors): simplest, not always smooth.</li>
+        <li><b>Cubic spline interpolation:</b> Smooths out "kinks"; widely used in quant libraries (e.g., QuantLib).</li>
+        <li><b>Parametric models:</b> Nelson-Siegel, Svensson forms fit a smooth parametric function to the observed rates.</li>
+      </ul>
+      <blockquote>
+        <b>Practical tip:</b> For real production code, use robust C++ libraries like <a href="https://www.quantlib.org/" target="_blank">QuantLib</a> for full day count, business calendar, and robust curve construction.
+      </blockquote>
+    </section>
+
+    <section>
+      <h2>Visualization</h2>
+      <p>
+        <img src="yield_curve_bootstrap.gif" alt="Yield Curve Bootstrapping GIF" class="center-img" />
+        <em>Animation: Bootstrapping spot rates, building the yield curve from short to long maturities. The GIF is generated from the CSV output using a Python script, showing the progressive construction of the yield curve as each bond is added.</em>
+      </p>
+    </section>
+
+    <section>
+      <h2>References &amp; Further Reading</h2>
+      <ul>
+        <li>F. J. Fabozzi, <i>Fixed Income Mathematics</i></li>
+        <li>Hull, <i>Options, Futures, and Other Derivatives</i></li>
+        <li><a href="https://www.quantlib.org/">QuantLib: Open Source Quant Library</a></li>
+      </ul>
     </section>
   </main>
   <footer>
     <p>&copy; 2024 Mohammed Karim Khaldi</p>
   </footer>
 </body>
-</html> 
+</html>
