@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Credit Risk Modeling (Python) | Financial Mathematics</title>
+  <link rel="stylesheet" href="../../assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    pre { background: #f4f4f4; padding: 1em; border-radius: 6px; overflow-x: auto; }
+    code { font-family: 'Fira Mono', 'Consolas', monospace; }
+    .center-img { display: block; margin: 1.5em auto; max-width: 350px; width: 100%; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Credit Risk Modeling (Python)</h1>
+    <nav>
+      <a href="../../index.html">Home</a>
+      <a href="../index.html">Projects</a>
+      <a href="../../about.html">About</a>
+      <a href="../../contact.html">Contact</a>
+    </nav>
+  </header>
+  <main>
+    <section>
+      <h2>Overview</h2>
+      <p>This project models and simulates credit risk using Python, including estimation of default probabilities and credit exposure analysis.</p>
+      <h3>Mathematical Explanation: Logistic Regression for Default Probability</h3>
+      <p>
+        Logistic regression is a statistical method used to estimate the probability that a binary event occurs (e.g., default or no default).<br>
+        The model predicts the probability \( p \) of default as:
+      </p>
+      <div style="overflow-x:auto"><span>\[
+p = \frac{1}{1 + e^{-(\beta_0 + \beta_1 x_1 + \beta_2 x_2 + ... + \beta_n x_n)}}
+\]</span></div>
+      <p>
+        where \( x_1, x_2, ... \) are features (e.g., income, loan amount), and \( \beta_0, \beta_1, ... \) are coefficients learned from data.<br>
+        The output is a probability between 0 and 1, interpreted as the likelihood of default.
+      </p>
+      <img src="credit_risk_result.gif" alt="Probability of Default GIF" class="center-img" />
+      <h3>Sample Python Code: Default Probability Estimation (Logistic Regression)</h3>
+      <p>This example uses synthetic data to estimate the probability of default using logistic regression, a common approach in credit risk modeling.</p>
+      <pre><code>import numpy as np
+from sklearn.linear_model import LogisticRegression
+
+# Synthetic data: [income, loan_amount], 1 = default, 0 = no default
+X = np.array([
+    [50000, 10000],
+    [60000, 15000],
+    [35000, 8000],
+    [80000, 20000],
+    [120000, 30000],
+    [40000, 12000],
+    [70000, 10000],
+    [30000, 5000],
+    [90000, 25000],
+    [100000, 40000]
+])
+y = np.array([0, 0, 1, 0, 0, 1, 0, 1, 0, 0])
+
+# Fit logistic regression model
+model = LogisticRegression()
+model.fit(X, y)
+
+# Predict probability of default for a new applicant
+new_applicant = np.array([[45000, 11000]])
+def_prob = model.predict_proba(new_applicant)[0, 1]
+print(f"Estimated probability of default: {def_prob:.2%}")
+</code></pre>
+      <h4>How to Run</h4>
+      <pre><code># Save as credit_risk_model.py
+pip install scikit-learn numpy
+python credit_risk_model.py
+</code></pre>
+      <h4>Sample Output</h4>
+      <pre><code>Estimated probability of default: 49.83%
+</code></pre>
+      <p><em>Note: In practice, real-world data and more features would be used for robust credit risk modeling.</em></p>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; 2024 Mohammed Karim Khaldi</p>
+  </footer>
+</body>
+</html> 

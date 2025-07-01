@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Option Pricing Models | Financial Mathematics</title>
+  <link rel="stylesheet" href="../../assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    pre { background: #f4f4f4; padding: 1em; border-radius: 6px; overflow-x: auto; }
+    code { font-family: 'Fira Mono', 'Consolas', monospace; }
+    .center-img { display: block; margin: 1.5em auto; max-width: 500px; width: 100%; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Option Pricing Models</h1>
+    <nav>
+      <a href="../../index.html">Home</a>
+      <a href="../index.html">Projects</a>
+      <a href="../../about.html">About</a>
+      <a href="../../contact.html">Contact</a>
+    </nav>
+  </header>
+  <main>
+    <section>
+      <h2>Overview</h2>
+      <p>
+        This page explores two foundational models for European option pricing: the Black-Scholes formula and the Binomial tree model.
+      </p>
+      <h3>Black-Scholes Formula</h3>
+      <p>
+        The Black-Scholes model gives a closed-form solution for the price of a European call option:
+      </p>
+      <div style="overflow-x:auto"><span>\[
+C = S_0 N(d_1) - K e^{-rT} N(d_2)
+\]</span></div>
+      <p>where</p>
+      <div style="overflow-x:auto"><span>\[
+d_1 = \frac{\ln(S_0/K) + (r + \frac{1}{2}\sigma^2)T}{\sigma\sqrt{T}}, \quad d_2 = d_1 - \sigma\sqrt{T}
+\]</span></div>
+      <ul>
+        <li>\( S_0 \): initial stock price</li>
+        <li>\( K \): strike price</li>
+        <li>\( r \): risk-free rate</li>
+        <li>\( \sigma \): volatility</li>
+        <li>\( T \): time to maturity</li>
+        <li>\( N(\cdot) \): standard normal CDF</li>
+      </ul>
+      <h4>Python Implementation</h4>
+      <pre><code>import numpy as np
+from scipy.stats import norm
+
+def black_scholes_call(S0, K, r, sigma, T):
+    d1 = (np.log(S0/K) + (r + 0.5*sigma**2)*T) / (sigma*np.sqrt(T))
+    d2 = d1 - sigma*np.sqrt(T)
+    call = S0 * norm.cdf(d1) - K * np.exp(-r*T) * norm.cdf(d2)
+    return call
+
+# Example usage
+price = black_scholes_call(100, 100, 0.05, 0.2, 1)
+print(f"Call price: {price:.2f}")
+</code></pre>
+      <h3>Binomial Tree Model</h3>
+      <p>
+        The binomial model approximates the price by simulating possible price paths over discrete time steps.
+      </p>
+      <pre><code>def binomial_call(S0, K, r, sigma, T, N=100):
+    dt = T / N
+    u = np.exp(sigma * np.sqrt(dt))
+    d = 1 / u
+    p = (np.exp(r*dt) - d) / (u - d)
+    # Terminal payoffs
+    ST = S0 * u**np.arange(N, -1, -1) * d**np.arange(0, N+1)
+    payoff = np.maximum(ST - K, 0)
+    # Backward induction
+    for _ in range(N):
+        payoff = np.exp(-r*dt) * (p * payoff[:-1] + (1-p) * payoff[1:])
+    return payoff[0]
+
+# Example usage
+price = binomial_call(100, 100, 0.05, 0.2, 1)
+print(f"Call price: {price:.2f}")
+</code></pre>
+      <h3>Visualization</h3>
+      <p>The GIF below shows how the Black-Scholes call price varies with strike price for fixed parameters.</p>
+      <img src="option_price_vs_strike.gif" alt="Option Price vs Strike GIF" class="center-img" />
+      <p><em>The Black-Scholes price decreases as the strike price increases, as expected.</em></p>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; 2024 Mohammed Karim Khaldi</p>
+  </footer>
+</body>
+</html> 

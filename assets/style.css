@@ -1,0 +1,68 @@
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #fafbfc;
+  color: #222;
+}
+header {
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  padding: 1.5rem 0 1rem 0;
+  text-align: center;
+}
+header h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2rem;
+  letter-spacing: 1px;
+}
+nav {
+  margin-bottom: 0.5rem;
+}
+nav a {
+  color: #0074d9;
+  text-decoration: none;
+  margin: 0 1rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+nav a:hover {
+  color: #005fa3;
+}
+main {
+  max-width: 700px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+.hero, .about, .contact {
+  text-align: center;
+}
+.projects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+.projects-list article {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+footer {
+  text-align: center;
+  padding: 1.5rem 0 1rem 0;
+  color: #888;
+  font-size: 0.95rem;
+  border-top: 1px solid #eee;
+  background: #fff;
+  margin-top: 2rem;
+}
+@media (max-width: 600px) {
+  main {
+    padding: 0 0.5rem;
+  }
+  .projects-list article {
+    padding: 1rem;
+  }
+} 

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Time Series Analysis (Python) | Financial Mathematics</title>
+  <link rel="stylesheet" href="../../assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    pre { background: #f4f4f4; padding: 1em; border-radius: 6px; overflow-x: auto; }
+    code { font-family: 'Fira Mono', 'Consolas', monospace; }
+    .center-img { display: block; margin: 1.5em auto; max-width: 500px; width: 100%; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Time Series Analysis (Python)</h1>
+    <nav>
+      <a href="../../index.html">Home</a>
+      <a href="../index.html">Projects</a>
+      <a href="../../about.html">About</a>
+      <a href="../../contact.html">Contact</a>
+    </nav>
+  </header>
+  <main>
+    <section>
+      <h2>Overview</h2>
+      <p>
+        This page demonstrates time series analysis techniques including decomposition and ARIMA forecasting, which are widely used in financial modeling.
+      </p>
+      <h3>Time Series Decomposition</h3>
+      <p>
+        Decomposition splits a time series into trend, seasonality, and residual components:
+      </p>
+      <div style="overflow-x:auto"><span>\[
+Y_t = T_t + S_t + R_t
+\]</span></div>
+      <ul>
+        <li>\( Y_t \): observed value</li>
+        <li>\( T_t \): trend</li>
+        <li>\( S_t \): seasonality</li>
+        <li>\( R_t \): residual</li>
+      </ul>
+      <h4>Python Implementation</h4>
+      <pre><code>import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from statsmodels.tsa.seasonal import seasonal_decompose
+
+np.random.seed(42)
+t = np.arange(120)
+trend = 0.05 * t
+seasonal = 2 * np.sin(2 * np.pi * t / 12)
+noise = np.random.normal(0, 1, 120)
+y = 10 + trend + seasonal + noise
+series = pd.Series(y)
+
+result = seasonal_decompose(series, model='additive', period=12)
+result.plot()
+plt.show()
+</code></pre>
+      <h3>ARIMA Forecasting</h3>
+      <p>
+        ARIMA models are used for forecasting time series with autocorrelation. The general ARIMA(\(p,d,q\)) model is:
+      </p>
+      <div style="overflow-x:auto"><span>\[
+\phi(B)(1-B)^d Y_t = \theta(B)\varepsilon_t
+\]</span></div>
+      <ul>
+        <li>\( \phi(B) \): autoregressive polynomial</li>
+        <li>\( \theta(B) \): moving average polynomial</li>
+        <li>\( d \): differencing order</li>
+      </ul>
+      <h4>Python Implementation</h4>
+      <pre><code>from statsmodels.tsa.arima.model import ARIMA
+
+model = ARIMA(series, order=(2,1,2))
+fit = model.fit()
+forecast = fit.forecast(steps=12)
+plt.plot(series, label='Actual')
+plt.plot(np.arange(len(series), len(series)+12), forecast, label='Forecast')
+plt.legend()
+plt.show()
+</code></pre>
+      <h3>Visualization</h3>
+      <p>The GIF below animates the ARIMA forecast vs. actual time series.</p>
+      <img src="arima_forecast.gif" alt="ARIMA Forecast GIF" class="center-img" />
+      <p><em>The ARIMA model captures the trend and seasonality for short-term forecasting.</em></p>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; 2024 Mohammed Karim Khaldi</p>
+  </footer>
+</body>
+</html> 

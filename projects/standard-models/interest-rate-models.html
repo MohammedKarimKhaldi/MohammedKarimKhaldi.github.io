@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interest Rate Models | Financial Mathematics</title>
+  <link rel="stylesheet" href="../../assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    pre { background: #f4f4f4; padding: 1em; border-radius: 6px; overflow-x: auto; }
+    code { font-family: 'Fira Mono', 'Consolas', monospace; }
+    .center-img { display: block; margin: 1.5em auto; max-width: 450px; width: 100%; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Interest Rate Models</h1>
+    <nav>
+      <a href="../../index.html">Home</a>
+      <a href="../index.html">Projects</a>
+      <a href="../../about.html">About</a>
+      <a href="../../contact.html">Contact</a>
+    </nav>
+  </header>
+  <main>
+    <section>
+      <h2>Overview</h2>
+      <p>This project investigates the Vasicek and Cox-Ingersoll-Ross (CIR) models for simulating and understanding interest rate dynamics in financial markets.</p>
+      <h3>Mathematical Explanation: Vasicek & CIR Models</h3>
+      <p>
+        <b>Vasicek Model:</b> The Vasicek model describes the evolution of interest rates as a mean-reverting process:
+      </p>
+      <div style="overflow-x:auto"><span>\[
+dr_t = \kappa (\theta - r_t) dt + \sigma dW_t
+\]</span></div>
+      <p>
+        where:
+        <ul>
+          <li>\( r_t \): short-term interest rate at time \( t \)</li>
+          <li>\( \kappa \): speed of mean reversion</li>
+          <li>\( \theta \): long-term mean rate</li>
+          <li>\( \sigma \): volatility</li>
+          <li>\( dW_t \): Wiener process (random shock)</li>
+        </ul>
+        The model captures the tendency of rates to revert to a long-term mean.
+      </p>
+      <p>
+        <b>Cox-Ingersoll-Ross (CIR) Model:</b> Similar to Vasicek, but ensures rates stay positive:
+      </p>
+      <div style="overflow-x:auto"><span>\[
+dr_t = \kappa (\theta - r_t) dt + \sigma \sqrt{r_t} dW_t
+\]</span></div>
+      <img src="interest_rate_paths.gif" alt="Vasicek Interest Rate Paths GIF" class="center-img" />
+      <h3>Sample Python Code: Simulating Vasicek Interest Rate Paths</h3>
+      <pre><code>import numpy as np
+import matplotlib.pyplot as plt
+
+# Parameters
+r0 = 0.03      # initial rate
+kappa = 0.15   # mean reversion speed
+theta = 0.05   # long-term mean
+sigma = 0.01   # volatility
+T = 2.0        # years
+N = 100        # time steps
+M = 10         # number of paths
+
+dt = T / N
+rates = np.zeros((M, N+1))
+rates[:, 0] = r0
+np.random.seed(42)
+
+for m in range(M):
+    for t in range(1, N+1):
+        dr = kappa * (theta - rates[m, t-1]) * dt + sigma * np.sqrt(dt) * np.random.randn()
+        rates[m, t] = rates[m, t-1] + dr
+
+times = np.linspace(0, T, N+1)
+for m in range(M):
+    plt.plot(times, rates[m])
+plt.xlabel('Time (years)')
+plt.ylabel('Interest Rate')
+plt.title('Vasicek Model: Simulated Interest Rate Paths')
+plt.show()
+</code></pre>
+      <h4>How to Run</h4>
+      <pre><code># Save as vasicek_sim.py
+pip install numpy matplotlib
+python vasicek_sim.py
+</code></pre>
+      <h4>Sample Output</h4>
+      <pre><code>Simulated 10 Vasicek interest rate paths over 2.0 years.
+</code></pre>
+      <p><em>The GIF above shows the evolution of 10 simulated interest rate paths using the Vasicek model.</em></p>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; 2024 Mohammed Karim Khaldi</p>
+  </footer>
+</body>
+</html> 

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monte Carlo Simulation (C++) | Financial Mathematics</title>
+  <link rel="stylesheet" href="../../assets/style.css">
+  <style>
+    pre { background: #f4f4f4; padding: 1em; border-radius: 6px; overflow-x: auto; }
+    code { font-family: 'Fira Mono', 'Consolas', monospace; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Monte Carlo Simulation (C++)</h1>
+    <nav>
+      <a href="../../index.html">Home</a>
+      <a href="../index.html">Projects</a>
+      <a href="../../about.html">About</a>
+      <a href="../../contact.html">Contact</a>
+    </nav>
+  </header>
+  <main>
+    <section>
+      <h2>Overview</h2>
+      <p>This project demonstrates the use of Monte Carlo methods for option pricing and risk analysis, implemented in C++ for high performance and scalability.</p>
+      <h3>Sample C++ Code: European Call Option Pricing</h3>
+      <pre><code>// Monte Carlo simulation for European Call Option Pricing (Black-Scholes)
+#include &lt;iostream&gt;
+#include &lt;random&gt;
+#include &lt;cmath&gt;
+
+int main() {
+    // Option parameters
+    double S0 = 100.0;   // Initial stock price
+    double K = 100.0;    // Strike price
+    double r = 0.05;     // Risk-free rate
+    double sigma = 0.2;  // Volatility
+    double T = 1.0;      // Time to maturity (years)
+    int N = 100000;      // Number of simulations
+
+    std::mt19937 gen(42); // Random number generator with fixed seed
+    std::normal_distribution&lt;&gt; dist(0.0, 1.0);
+
+    double payoff_sum = 0.0;
+    for (int i = 0; i &lt; N; ++i) {
+        double Z = dist(gen);
+        double ST = S0 * std::exp((r - 0.5 * sigma * sigma) * T + sigma * std::sqrt(T) * Z);
+        double payoff = std::max(ST - K, 0.0);
+        payoff_sum += payoff;
+    }
+    double price = std::exp(-r * T) * (payoff_sum / N);
+    std::cout &lt;&lt; "Estimated European Call Option Price: " &lt;&lt; price &lt;&lt; std::endl;
+    return 0;
+}
+</code></pre>
+      <h4>How to Compile and Run</h4>
+      <pre><code>// Save as monte_carlo_option.cpp
+g++ -O2 -std=c++11 monte_carlo_option.cpp -o monte_carlo_option
+./monte_carlo_option
+</code></pre>
+      <h4>Sample Output</h4>
+      <pre><code>Estimated European Call Option Price: 10.43
+</code></pre>
+      <p><em>Note: The result may vary slightly due to randomness, but should be close to the Black-Scholes analytical price.</em></p>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; 2024 Mohammed Karim Khaldi</p>
+  </footer>
+</body>
+</html> 

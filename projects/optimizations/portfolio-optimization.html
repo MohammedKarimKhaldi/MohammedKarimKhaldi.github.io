@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Portfolio Optimization | Quantitative Research</title>
+  <link rel="stylesheet" href="../../assets/style.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    pre { background: #f4f4f4; padding: 1em; border-radius: 6px; overflow-x: auto; }
+    code { font-family: 'Fira Mono', 'Consolas', monospace; }
+    .center-img { display: block; margin: 1.5em auto; max-width: 500px; width: 100%; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Portfolio Optimization</h1>
+    <nav>
+      <a href="../../index.html">Home</a>
+      <a href="../index.html">Projects</a>
+      <a href="../../about.html">About</a>
+      <a href="../../contact.html">Contact</a>
+    </nav>
+  </header>
+
+  <main>
+    <section>
+      <h2>Overview</h2>
+      <p>
+        This project explores advanced portfolio optimization techniques from Modern Portfolio Theory (MPT) to Sharpe ratio maximization and extensions like the Black-Litterman model.
+        It demonstrates numerical solutions to constructing efficient portfolios using historical or simulated return data.
+      </p>
+
+      <h3>Theoretical Framework</h3>
+      <p><strong>1. Mean-Variance Optimization</strong></p>
+      <p>
+        The classical formulation introduced by Markowitz seeks to minimize portfolio variance for a given expected return \( R \):
+      </p>
+      <div style="overflow-x:auto"><span>\[
+\begin{aligned}
+\min_{w} \quad & w^T \Sigma w \\
+\text{s.t.} \quad & w^T \mu = R \\
+& \sum_i w_i = 1 \\
+& w_i \geq 0 \ (\text{if no shorting})
+\end{aligned}
+\]</span></div>
+      <p>Where:</p>
+      <ul>
+        <li>\( w \): portfolio weights</li>
+        <li>\( \mu \): expected return vector</li>
+        <li>\( \Sigma \): covariance matrix of returns</li>
+      </ul>
+
+      <p><strong>2. Sharpe Ratio Maximization</strong></p>
+      <div style="overflow-x:auto"><span>\[
+\max_{w} \frac{w^T \mu - r_f}{\sqrt{w^T \Sigma w}} \quad \text{s.t.} \quad \sum_i w_i = 1
+\]</span></div>
+      <p>
+        This maximizes excess return per unit of risk. \( r_f \) is the risk-free rate (often set to 0 in simulations).
+      </p>
+
+      <h3>Python Implementation: Efficient Frontier Simulation</h3>
+      <pre><code>import numpy as np
+import matplotlib.pyplot as plt
+
+np.random.seed(42)
+n_assets = 5
+n_portfolios = 5000
+trading_days = 252
+
+# Simulate realistic log returns
+mu = np.array([0.08, 0.10, 0.12, 0.09, 0.11])
+sigma = np.array([0.15, 0.20, 0.25, 0.18, 0.22])
+corr_matrix = np.array([
+    [1.0, 0.2, 0.4, 0.1, 0.3],
+    [0.2, 1.0, 0.3, 0.2, 0.4],
+    [0.4, 0.3, 1.0, 0.5, 0.2],
+    [0.1, 0.2, 0.5, 1.0, 0.3],
+    [0.3, 0.4, 0.2, 0.3, 1.0]
+])
+cov_matrix = np.outer(sigma, sigma) * corr_matrix
+
+results = np.zeros((3, n_portfolios))
+weights_record = []
+
+for i in range(n_portfolios):
+    weights = np.random.dirichlet(np.ones(n_assets))
+    ret = np.dot(weights, mu)
+    vol = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
+    sharpe = ret / vol
+    results[0, i] = vol
+    results[1, i] = ret
+    results[2, i] = sharpe
+    weights_record.append(weights)
+
+# Plotting
+plt.figure(figsize=(10, 6))
+plt.scatter(results[0], results[1], c=results[2], cmap='viridis', s=10)
+plt.xlabel('Annualized Volatility')
+plt.ylabel('Annualized Return')
+plt.title('Simulated Efficient Frontier')
+plt.colorbar(label='Sharpe Ratio')
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+</code></pre>
+
+      <h4>How to Run</h4>
+      <pre><code># Save as optimize.py
+pip install numpy matplotlib
+python optimize.py
+</code></pre>
+
+      <h3>Advanced Extensions</h3>
+      <p><strong>Black-Litterman Model:</strong> Combines market equilibrium with investor views to adjust expected returns, improving robustness and stability of optimization results.</p>
+      <p><strong>Transaction Costs & Constraints:</strong> Real-world models integrate turnover penalties and position constraints to minimize slippage and enforce practical limits.</p>
+      <p><strong>Robust Optimization:</strong> Addresses estimation error in \(\mu\) and \(\Sigma\) by optimizing worst-case or uncertainty-aware objectives.</p>
+
+      <img src="portfolio_optimization.gif" alt="Efficient Frontier GIF" class="center-img" />
+      <p><em>The GIF above animates the construction of the efficient frontier and highlights optimal portfolios based on return-volatility trade-offs.</em></p>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Mohammed Karim Khaldi</p>
+  </footer>
+</body>
+</html>
