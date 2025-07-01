@@ -5,9 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Monte Carlo Simulation (C++) | Financial Mathematics</title>
   <link rel="stylesheet" href="../../assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <style>
     pre { background: #f4f4f4; padding: 1em; border-radius: 6px; overflow-x: auto; }
     code { font-family: 'Fira Mono', 'Consolas', monospace; }
+    .center-img { display: block; margin: 1.5em auto; max-width: 500px; width: 100%; }
   </style>
 </head>
 <body>
@@ -23,46 +25,92 @@
   <main>
     <section>
       <h2>Overview</h2>
-      <p>This project demonstrates the use of Monte Carlo methods for option pricing and risk analysis, implemented in C++ for high performance and scalability.</p>
-      <h3>Sample C++ Code: European Call Option Pricing</h3>
-      <pre><code>// Monte Carlo simulation for European Call Option Pricing (Black-Scholes)
-#include &lt;iostream&gt;
+      <p>
+        Monte Carlo simulation is a powerful technique for pricing options and other derivatives by simulating random price paths. Computational speed is crucial, especially for large numbers of simulations. Here, we compare Python (single-threaded and parallel), C++ (single-threaded), and C++ (Eigen vectorized) implementations.
+      </p>
+      <h3>Mathematical Model</h3>
+      <div style="overflow-x:auto"><span>\[
+S_T = S_0 \exp\left((r - \frac{1}{2}\sigma^2)T + \sigma \sqrt{T} Z\right)
+\]</span></div>
+      <p>where \( Z \sim N(0,1) \).</p>
+      <h3>C++ Code (Single-threaded)</h3>
+      <pre><code>#include &lt;iostream&gt;
 #include &lt;random&gt;
 #include &lt;cmath&gt;
+#include &lt;chrono&gt;
 
-int main() {
-    // Option parameters
-    double S0 = 100.0;   // Initial stock price
-    double K = 100.0;    // Strike price
-    double r = 0.05;     // Risk-free rate
-    double sigma = 0.2;  // Volatility
-    double T = 1.0;      // Time to maturity (years)
-    int N = 100000;      // Number of simulations
-
-    std::mt19937 gen(42); // Random number generator with fixed seed
+int main(int argc, char* argv[]) {
+    double S0 = 100, K = 100, r = 0.05, sigma = 0.2, T = 1.0;
+    int N = 10000000;
+    if (argc > 1) N = std::stoi(argv[1]);
+    std::mt19937 gen(42);
     std::normal_distribution&lt;&gt; dist(0.0, 1.0);
-
     double payoff_sum = 0.0;
-    for (int i = 0; i &lt; N; ++i) {
+    auto start = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < N; ++i) {
         double Z = dist(gen);
         double ST = S0 * std::exp((r - 0.5 * sigma * sigma) * T + sigma * std::sqrt(T) * Z);
         double payoff = std::max(ST - K, 0.0);
         payoff_sum += payoff;
     }
     double price = std::exp(-r * T) * (payoff_sum / N);
-    std::cout &lt;&lt; "Estimated European Call Option Price: " &lt;&lt; price &lt;&lt; std::endl;
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration&lt;double&gt; elapsed = end - start;
+    std::cout &lt;&lt; "C++ (single): Price = " &lt;&lt; price &lt;&lt; ", Time = " &lt;&lt; elapsed.count() &lt;&lt; "s\n";
     return 0;
 }
 </code></pre>
-      <h4>How to Compile and Run</h4>
-      <pre><code>// Save as monte_carlo_option.cpp
-g++ -O2 -std=c++11 monte_carlo_option.cpp -o monte_carlo_option
-./monte_carlo_option
+      <h3>C++ Code (Eigen Vectorized)</h3>
+      <pre><code>#include &lt;iostream&gt;
+#include &lt;Eigen/Dense&gt;
+#include &lt;random&gt;
+#include &lt;chrono&gt;
+
+int main(int argc, char* argv[]) {
+    using namespace Eigen;
+    double S0 = 100, K = 100, r = 0.05, sigma = 0.2, T = 1.0;
+    int N = 10000000;
+    if (argc > 1) N = std::stoi(argv[1]);
+    std::mt19937 gen(42);
+    std::normal_distribution&lt;&gt; dist(0.0, 1.0);
+    ArrayXd Z(N);
+    for (int i = 0; i < N; ++i) Z[i] = dist(gen);
+    auto start = std::chrono::high_resolution_clock::now();
+    ArrayXd ST = S0 * ((r - 0.5 * sigma * sigma) * T + sigma * std::sqrt(T) * Z).exp();
+    ArrayXd payoff = (ST - K).max(0.0);
+    double price = std::exp(-r * T) * payoff.mean();
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration&lt;double&gt; elapsed = end - start;
+    std::cout &lt;&lt; "C++ (Eigen vectorized): Price = " &lt;&lt; price &lt;&lt; ", Time = " &lt;&lt; elapsed.count() &lt;&lt; "s\n";
+    return 0;
+}
 </code></pre>
-      <h4>Sample Output</h4>
-      <pre><code>Estimated European Call Option Price: 10.43
+      <h3>Python Code</h3>
+      <pre><code>import numpy as np
+import time
+S0, K, r, sigma, T, N = 100, 100, 0.05, 0.2, 1.0, 10_000_000
+start = time.time()
+Z = np.random.normal(0, 1, N)
+ST = S0 * np.exp((r - 0.5 * sigma**2) * T + sigma * np.sqrt(T) * Z)
+payoff = np.maximum(ST - K, 0)
+price = np.exp(-r * T) * np.mean(payoff)
+print(f"Python: Price = {price:.2f}, Time = {time.time() - start:.2f}s")
 </code></pre>
-      <p><em>Note: The result may vary slightly due to randomness, but should be close to the Black-Scholes analytical price.</em></p>
+      <h3>Benchmarking Methodology</h3>
+      <p>
+        For a fair comparison, the runtime for each implementation is measured <strong>inside</strong> the C++ and Python code, not from the outside. The Python benchmarking script runs each executable with the desired number of iterations, parses the computation time from the program's output, and plots the results. This avoids including process startup overhead and ensures the timing reflects only the computation.
+      </p>
+      <h3>Results</h3>
+      <img src="monte_carlo_runtime_comparison.png" alt="Monte Carlo Runtime Comparison" class="center-img" />
+      <p>
+        <strong>Observations:</strong><br>
+        - C++ (Eigen vectorized) is the fastest for all simulation sizes, thanks to vectorized operations.<br>
+        - C++ (single-threaded) is significantly faster than Python, but slower than Eigen.<br>
+        - Python (single-threaded) is slowest, but vectorized numpy operations make it competitive for moderate sizes.<br>
+        - Python (parallel) does not scale well due to process overhead and memory bandwidth limits.<br>
+        <br>
+        <em>Note: OpenMP (parallel C++) is not included due to lack of OpenMP support in the default macOS Clang compiler. If you use GCC with OpenMP, you may see even faster results for parallel C++.</em>
+      </p>
     </section>
   </main>
   <footer>

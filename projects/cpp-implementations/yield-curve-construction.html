@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Yield Curve Construction (C++) | Financial Mathematics</title>
   <link rel="stylesheet" href="../../assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    pre { background: #f4f4f4; padding: 1em; border-radius: 6px; overflow-x: auto; }
+    code { font-family: 'Fira Mono', 'Consolas', monospace; }
+    .center-img { display: block; margin: 1.5em auto; max-width: 500px; width: 100%; }
+  </style>
 </head>
 <body>
   <header>
@@ -19,14 +25,47 @@
   <main>
     <section>
       <h2>Overview</h2>
-      <p>This project focuses on building and interpolating yield curves from market data using C++. It covers bootstrapping, interpolation, and visualization techniques.</p>
-      <h3>Features</h3>
-      <ul>
-        <li>Bootstrapping yield curves</li>
-        <li>Linear and spline interpolation</li>
-        <li>Market data integration</li>
-      </ul>
-      <p><em>Sample C++ code and results coming soon.</em></p>
+      <p>
+        Yield curve construction is fundamental in fixed income analytics. The <b>bootstrapping</b> method extracts zero-coupon (spot) rates from bond prices, and interpolation fills in rates for non-observed maturities.
+      </p>
+      <h3>Bootstrapping Zero-Coupon Curve</h3>
+      <p>
+        For a zero-coupon bond, the spot rate \( r \) is found from the price \( P \) and face value \( F \):
+      </p>
+      <div style="overflow-x:auto"><span>\[
+P = \frac{F}{(1 + r)^T}
+\]</span></div>
+      <p>
+        For coupon bonds, solve recursively using known spot rates for earlier maturities.
+      </p>
+      <h4>C++ Example: Bootstrapping Spot Rates</h4>
+      <pre><code>#include &lt;iostream&gt;
+#include &lt;vector&gt;
+#include &lt;cmath&gt;
+
+int main() {
+    // Example: 1Y, 2Y, 3Y bonds (annual coupons)
+    std::vector&lt;double&gt; prices = {98.0, 95.0, 92.0};
+    std::vector&lt;double&gt; coupons = {2.0, 2.5, 3.0};
+    double face = 100.0;
+    std::vector&lt;double&gt; spots;
+    for (size_t i = 0; i &lt; prices.size(); ++i) {
+        double sum = 0.0;
+        for (size_t j = 0; j &lt; i; ++j)
+            sum += coupons[i] / std::pow(1 + spots[j], j + 1);
+        double numer = coupons[i] + face;
+        double denom = prices[i] - sum;
+        double r = std::pow(numer / denom, 1.0 / (i + 1)) - 1.0;
+        spots.push_back(r);
+        std::cout &lt;&lt; "Year " &lt;&lt; (i+1) &lt;&lt; ": Spot rate = " &lt;&lt; r*100 &lt;&lt; "%\n";
+    }
+    return 0;
+}
+</code></pre>
+      <h3>Visualization</h3>
+      <p>The GIF below animates the construction of a yield curve from synthetic bond data.</p>
+      <img src="yield_curve_bootstrap.gif" alt="Yield Curve Bootstrapping GIF" class="center-img" />
+      <p><em>Bootstrapped spot rates are shown for increasing maturities.</em></p>
     </section>
   </main>
   <footer>
